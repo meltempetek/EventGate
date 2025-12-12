@@ -13,6 +13,13 @@ namespace EventDeneme
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
+            // Admin route - /admin URL'ini Admin/Login'e yönlendir
+            routes.MapRoute(
+                name: "Admin",
+                url: "admin",
+                defaults: new { controller = "Admin", action = "Index" }
+            );
+
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",

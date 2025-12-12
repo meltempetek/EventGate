@@ -1,0 +1,96 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EventGate | Admin Login</title>
+    <link rel="stylesheet" href="@Url.Content("~/Content/register.css")">
+    <link rel="icon" type="image/png" href="~/images/favicon.png" />
+    <style>
+        .admin-badge {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background: rgba(210, 34, 34, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1001;
+            font-size: 14px;
+        }
+        .form-box h1 {
+            color: #d22;
+        }
+        .btn-primary {
+            background: #d22;
+        }
+        .btn-primary:hover {
+            background: #b11;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="slider">
+            <a href="/">
+                <img class="headerlogo" src="@Url.Content("~/images/logo.png")" />
+            </a>
+            <div class="admin-badge">ADMIN PANEL</div>
+
+            <div class="slide active" style="background-image: url('@Url.Content("~/images/sebnemferah.jpg")');"></div>
+            <div class="slide" style="background-image: url('@Url.Content("~/images/cinema.jpg")');"></div>
+            <div class="slide" style="background-image: url('@Url.Content("~/images/theater.jpg")');"></div>
+
+            <div class="text">
+                <h1>Admin Dashboard Access</h1>
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="form-box">
+                <h1>Admin Sign in</h1>
+
+                @using (Html.BeginForm("Login", "Admin", FormMethod.Post))
+                {
+                    <label>Username*</label>
+                    <input type="text" name="username" placeholder="Enter your username" required autofocus>
+
+                    <label>Password*</label>
+                    <input type="password" name="password" placeholder="Enter your password" required>
+
+                    <button type="submit" class="btn-primary">Login</button>
+                }
+
+                @if (ViewBag.Error != null)
+                {
+                    <p style="color:red; margin-top: 15px;">@ViewBag.Error</p>
+                }
+
+                <div class="footer-text" style="margin-top: 20px;">
+                    <a href="/">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let index = 0;
+
+        setInterval(() => {
+            slides[index].classList.remove('active');
+            index = (index + 1) % slides.length;
+            slides[index].classList.add('active');
+        }, 4000);
+    </script>
+
+</body>
+</html>
+

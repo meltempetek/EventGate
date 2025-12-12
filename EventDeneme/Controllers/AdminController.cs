@@ -11,6 +11,13 @@ namespace EventDeneme.Controllers
     {
         private pr2Entities1 db = new pr2Entities1();
 
+        // Admin route - /admin URL'ini Login'e yönlendir
+        public ActionResult Index()
+        {
+            if (IsAdminLoggedIn()) return RedirectToAction("Dashboard");
+            return RedirectToAction("Login");
+        }
+
         // Admin Auth Helper
         private bool IsAdminLoggedIn()
         {
