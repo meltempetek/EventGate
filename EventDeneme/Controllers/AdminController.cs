@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web.Mvc;
 using EventDeneme.Models;
+using System.Data.Entity;
 
 namespace EventDeneme.Controllers
 {
@@ -131,7 +132,160 @@ namespace EventDeneme.Controllers
         public ActionResult Events()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.events.ToList());
+            
+            ViewBag.Title = "Events";
+            var events = db.events
+                .Include("categories")
+                .Include("organizers")
+                .OrderByDescending(e => e.created_at)
+                .ToList();
+            
+            return View(events);
+        }
+
+        // Add Event
+        public ActionResult AddEvent()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            ViewBag.Title = "Add Event";
+            ViewBag.Categories = db.categories.ToList();
+            ViewBag.Organizers = db.organizers
+                .Select(o => new { 
+                    id = o.id, 
+                    name = !string.IsNullOrEmpty(o.brand_name) ? o.brand_name : o.legal_name 
+                })
+                .ToList();
+            
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddEvent(events newEvent)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            if (ModelState.IsValid)
+            {
+                newEvent.created_at = DateTime.Now;
+                newEvent.updated_at = DateTime.Now;
+                if (string.IsNullOrEmpty(newEvent.status))
+                    newEvent.status = "pending";
+                
+                db.events.Add(newEvent);
+                db.SaveChanges();
+                
+                TempData["Success"] = "Etkinlik başarıyla eklendi.";
+                return RedirectToAction("Events");
+            }
+            
+            ViewBag.Title = "Add Event";
+            ViewBag.Categories = db.categories.ToList();
+            ViewBag.Organizers = db.organizers
+                .Select(o => new { 
+                    id = o.id, 
+                    name = !string.IsNullOrEmpty(o.brand_name) ? o.brand_name : o.legal_name 
+                })
+                .ToList();
+            ViewBag.Error = "Lütfen tüm gerekli alanları doldurun.";
+            
+            return View(newEvent);
+        }
+
+        // Edit Event
+        public ActionResult EditEvent(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var eventItem = db.events.Find(id);
+            if (eventItem == null)
+            {
+                TempData["Error"] = "Etkinlik bulunamadı.";
+                return RedirectToAction("Events");
+            }
+            
+            ViewBag.Title = "Edit Event";
+            ViewBag.Categories = db.categories.ToList();
+            ViewBag.Organizers = db.organizers
+                .Select(o => new { 
+                    id = o.id, 
+                    name = !string.IsNullOrEmpty(o.brand_name) ? o.brand_name : o.legal_name 
+                })
+                .ToList();
+            
+            return View(eventItem);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditEvent(events updatedEvent)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            if (ModelState.IsValid)
+            {
+                var eventItem = db.events.Find(updatedEvent.id);
+                if (eventItem == null)
+                {
+                    TempData["Error"] = "Etkinlik bulunamadı.";
+                    return RedirectToAction("Events");
+                }
+                
+                eventItem.title = updatedEvent.title;
+                eventItem.description = updatedEvent.description;
+                eventItem.category_id = updatedEvent.category_id;
+                eventItem.organizer_id = updatedEvent.organizer_id;
+                eventItem.language = updatedEvent.language;
+                eventItem.age_limit = updatedEvent.age_limit;
+                eventItem.poster_url = updatedEvent.poster_url;
+                eventItem.status = updatedEvent.status;
+                eventItem.updated_at = DateTime.Now;
+                
+                db.SaveChanges();
+                
+                TempData["Success"] = "Etkinlik başarıyla güncellendi.";
+                return RedirectToAction("Events");
+            }
+            
+            ViewBag.Title = "Edit Event";
+            ViewBag.Categories = db.categories.ToList();
+            ViewBag.Organizers = db.organizers
+                .Select(o => new { 
+                    id = o.id, 
+                    name = !string.IsNullOrEmpty(o.brand_name) ? o.brand_name : o.legal_name 
+                })
+                .ToList();
+            ViewBag.Error = "Lütfen tüm gerekli alanları doldurun.";
+            
+            return View(updatedEvent);
+        }
+
+        // Delete Event
+        [HttpPost]
+        public ActionResult DeleteEvent(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var eventItem = db.events.Find(id);
+            if (eventItem == null)
+            {
+                TempData["Error"] = "Etkinlik bulunamadı.";
+                return RedirectToAction("Events");
+            }
+            
+            // Performansları kontrol et
+            if (eventItem.performances != null && eventItem.performances.Any())
+            {
+                TempData["Error"] = "Bu etkinliğe ait performanslar bulunduğu için silinemez. Önce performansları silin.";
+                return RedirectToAction("Events");
+            }
+            
+            db.events.Remove(eventItem);
+            db.SaveChanges();
+            
+            TempData["Success"] = "Etkinlik başarıyla silindi.";
+            return RedirectToAction("Events");
         }
 
         // 4. Venues Management (admin-venues.html)
