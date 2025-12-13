@@ -34,6 +34,15 @@ namespace EventDeneme.Controllers
             }
         }
 
+        private bool VerifyPassword(string hashedPassword, string providedPassword)
+        {
+            if (string.IsNullOrEmpty(hashedPassword) || string.IsNullOrEmpty(providedPassword))
+                return false;
+
+            // SHA256 hash formatı için (proje standardı)
+            return HashPassword(providedPassword) == hashedPassword;
+        }
+
         // 1. Admin Login (admin-login.html)
         public ActionResult Login()
         {
@@ -44,10 +53,15 @@ namespace EventDeneme.Controllers
         [HttpPost]
         public ActionResult Login(string username, string password)
         {
-            string hashedPassword = HashPassword(password);
-            var admin = db.admins.FirstOrDefault(a => a.username == username && a.password_hash == hashedPassword);
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                ViewBag.Error = "Username and password are required";
+                return View();
+            }
 
-            if (admin != null)
+            var admin = db.admins.FirstOrDefault(a => a.username == username);
+
+            if (admin != null && VerifyPassword(admin.password_hash, password))
             {
                 Session["AdminID"] = admin.id;
                 Session["AdminRole"] = admin.role;
@@ -72,10 +86,44 @@ namespace EventDeneme.Controllers
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
 
+            ViewBag.Title = "Dashboard";
+            
+            // Temel İstatistikler
             ViewBag.TotalEvents = db.events.Count();
             ViewBag.TotalUsers = db.users.Count();
             ViewBag.TotalOrganizers = db.organizers.Count();
-            // Add more stats as needed
+            ViewBag.TotalVenues = db.venues.Count();
+            ViewBag.TotalTickets = db.tickets.Count();
+            ViewBag.TotalOrders = db.orders.Count();
+            
+            // Finansal İstatistikler
+            ViewBag.TotalRevenue = db.orders
+                .Where(o => o.status == "completed" || o.status == "paid")
+                .Sum(o => (decimal?)o.total_amount) ?? 0;
+            
+            ViewBag.PendingOrders = db.orders
+                .Count(o => o.status == "pending" || o.status == "processing");
+            
+            // İade İstatistikleri
+            ViewBag.PendingRefunds = db.refunds
+                .Count(r => r.status == "pending");
+            
+            ViewBag.TotalRefunds = db.refunds.Count();
+            ViewBag.TotalRefundAmount = db.refunds
+                .Where(r => r.status == "processed" || r.status == "completed")
+                .Sum(r => (decimal?)r.amount) ?? 0;
+            
+            // Son 7 gün içinde yeni kayıtlar
+            DateTime lastWeek = DateTime.Now.AddDays(-7);
+            ViewBag.NewUsersThisWeek = db.users
+                .Count(u => u.created_at.HasValue && u.created_at.Value >= lastWeek);
+            
+            ViewBag.NewEventsThisWeek = db.events
+                .Count(e => e.created_at.HasValue && e.created_at.Value >= lastWeek);
+            
+            ViewBag.NewOrdersThisWeek = db.orders
+                .Count(o => o.created_at.HasValue && o.created_at.Value >= lastWeek);
+            
             return View();
         }
 
@@ -120,6 +168,7 @@ namespace EventDeneme.Controllers
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
             return View(db.organizers.ToList());
         }
+
     }
 }
 

@@ -1,20 +1,13 @@
 ﻿using EventDeneme.Models;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data.SqlClient;
 using System.Web.Mvc;
 using System.Linq;
 using System;
 
 
-namespace ProjeAdi.Controllers
+namespace EventDeneme.Controllers
 {
     public class HomeController : Controller
     {
-        string conStr = ConfigurationManager
-            .ConnectionStrings["DefaultConnection"]
-            .ConnectionString;
-
         pr2Entities1 db = new pr2Entities1();
 
         public ActionResult Index()

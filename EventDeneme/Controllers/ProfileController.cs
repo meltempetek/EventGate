@@ -23,7 +23,7 @@ namespace EventDeneme.Controllers
             // ✅ Login kontrolü
             if (Session["UserID"] == null)
             {
-                return RedirectToAction("Login", "Register");
+                return RedirectToAction("Signin", "Register");
             }
 
             // ✅ HATA BURADAYDI → Artık %100 güvenli
@@ -38,7 +38,7 @@ namespace EventDeneme.Controllers
         {
             if (Session["UserID"] == null)
             {
-                return RedirectToAction("Login", "Register");
+                return RedirectToAction("Signin", "Register");
             }
 
             // ✅ Yeni şifreler uyuşuyor mu?
@@ -54,7 +54,7 @@ namespace EventDeneme.Controllers
 
             if (user == null)
             {
-                return RedirectToAction("Login", "Register");
+                return RedirectToAction("Signin", "Register");
             }
 
             // ✅ Eski şifre hash kontrolü
@@ -85,7 +85,7 @@ namespace EventDeneme.Controllers
         {
             if (Session["UserID"] == null)
             {
-                return RedirectToAction("Login", "Register");
+                return RedirectToAction("Signin", "Register");
             }
 
             int userId = Convert.ToInt32(Session["UserID"]);
@@ -94,7 +94,7 @@ namespace EventDeneme.Controllers
 
             if (user == null)
             {
-                return RedirectToAction("Login", "Register");
+                return RedirectToAction("Signin", "Register");
             }
 
             // ✅ Güncelleme
