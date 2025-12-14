@@ -292,14 +292,235 @@ namespace EventDeneme.Controllers
         public ActionResult Venues()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.venues.ToList());
+            
+            ViewBag.Title = "Venues";
+            var venues = db.venues
+                .Include("cities")
+                .OrderBy(v => v.name)
+                .ToList();
+            
+            return View(venues);
+        }
+
+        // Add Venue
+        public ActionResult AddVenue()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            ViewBag.Title = "Add Venue";
+            ViewBag.Cities = db.cities.OrderBy(c => c.name).ToList();
+            
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddVenue(venues newVenue)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            if (ModelState.IsValid)
+            {
+                db.venues.Add(newVenue);
+                db.SaveChanges();
+                
+                TempData["Success"] = "Mekan başarıyla eklendi.";
+                return RedirectToAction("Venues");
+            }
+            
+            ViewBag.Title = "Add Venue";
+            ViewBag.Cities = db.cities.OrderBy(c => c.name).ToList();
+            ViewBag.Error = "Lütfen tüm gerekli alanları doldurun.";
+            
+            return View(newVenue);
+        }
+
+        // Edit Venue
+        public ActionResult EditVenue(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var venue = db.venues.Find(id);
+            if (venue == null)
+            {
+                TempData["Error"] = "Mekan bulunamadı.";
+                return RedirectToAction("Venues");
+            }
+            
+            ViewBag.Title = "Edit Venue";
+            ViewBag.Cities = db.cities.OrderBy(c => c.name).ToList();
+            
+            return View(venue);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditVenue(venues updatedVenue)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            if (ModelState.IsValid)
+            {
+                var venue = db.venues.Find(updatedVenue.id);
+                if (venue == null)
+                {
+                    TempData["Error"] = "Mekan bulunamadı.";
+                    return RedirectToAction("Venues");
+                }
+                
+                venue.name = updatedVenue.name;
+                venue.city_id = updatedVenue.city_id;
+                venue.address = updatedVenue.address;
+                venue.latitude = updatedVenue.latitude;
+                venue.longitude = updatedVenue.longitude;
+                venue.has_seating = updatedVenue.has_seating;
+                
+                db.SaveChanges();
+                
+                TempData["Success"] = "Mekan başarıyla güncellendi.";
+                return RedirectToAction("Venues");
+            }
+            
+            ViewBag.Title = "Edit Venue";
+            ViewBag.Cities = db.cities.OrderBy(c => c.name).ToList();
+            ViewBag.Error = "Lütfen tüm gerekli alanları doldurun.";
+            
+            return View(updatedVenue);
+        }
+
+        // Delete Venue
+        [HttpPost]
+        public ActionResult DeleteVenue(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var venue = db.venues.Find(id);
+            if (venue == null)
+            {
+                TempData["Error"] = "Mekan bulunamadı.";
+                return RedirectToAction("Venues");
+            }
+            
+            // Performansları kontrol et
+            if (venue.performances != null && venue.performances.Any())
+            {
+                TempData["Error"] = "Bu mekana ait performanslar bulunduğu için silinemez. Önce performansları silin.";
+                return RedirectToAction("Venues");
+            }
+            
+            // Seatmaps ve seats kontrolü
+            if ((venue.seatmaps != null && venue.seatmaps.Any()) || 
+                (venue.seats != null && venue.seats.Any()))
+            {
+                TempData["Error"] = "Bu mekana ait koltuk haritaları veya koltuklar bulunduğu için silinemez. Önce bunları silin.";
+                return RedirectToAction("Venues");
+            }
+            
+            db.venues.Remove(venue);
+            db.SaveChanges();
+            
+            TempData["Success"] = "Mekan başarıyla silindi.";
+            return RedirectToAction("Venues");
         }
 
         // 5. Users Management (admin-users.html)
         public ActionResult Users()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.users.ToList());
+            
+            ViewBag.Title = "Users";
+            var users = db.users
+                .OrderByDescending(u => u.created_at)
+                .ToList();
+            
+            return View(users);
+        }
+
+        // Edit User
+        public ActionResult EditUser(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var user = db.users.Find(id);
+            if (user == null)
+            {
+                TempData["Error"] = "Kullanıcı bulunamadı.";
+                return RedirectToAction("Users");
+            }
+            
+            ViewBag.Title = "Edit User";
+            
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditUser(users updatedUser, string newPassword)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            if (ModelState.IsValid)
+            {
+                var user = db.users.Find(updatedUser.id);
+                if (user == null)
+                {
+                    TempData["Error"] = "Kullanıcı bulunamadı.";
+                    return RedirectToAction("Users");
+                }
+                
+                user.name = updatedUser.name;
+                user.surname = updatedUser.surname;
+                user.email = updatedUser.email;
+                user.phone = updatedUser.phone;
+                
+                // Şifre değiştirilmek isteniyorsa
+                if (!string.IsNullOrEmpty(newPassword))
+                {
+                    user.password_hash = HashPassword(newPassword);
+                }
+                
+                user.updated_at = DateTime.Now;
+                
+                db.SaveChanges();
+                
+                TempData["Success"] = "Kullanıcı başarıyla güncellendi.";
+                return RedirectToAction("Users");
+            }
+            
+            ViewBag.Title = "Edit User";
+            ViewBag.Error = "Lütfen tüm gerekli alanları doldurun.";
+            
+            return View(updatedUser);
+        }
+
+        // Delete User
+        [HttpPost]
+        public ActionResult DeleteUser(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var user = db.users.Find(id);
+            if (user == null)
+            {
+                TempData["Error"] = "Kullanıcı bulunamadı.";
+                return RedirectToAction("Users");
+            }
+            
+            // İlişkili kayıtları kontrol et
+            if ((user.carts != null && user.carts.Any()) ||
+                (user.orders != null && user.orders.Any()) ||
+                (user.sessions != null && user.sessions.Any()) ||
+                (user.user_payment_methods != null && user.user_payment_methods.Any()))
+            {
+                TempData["Error"] = "Bu kullanıcıya ait sepet, sipariş, oturum veya ödeme yöntemi kayıtları bulunduğu için silinemez.";
+                return RedirectToAction("Users");
+            }
+            
+            db.users.Remove(user);
+            db.SaveChanges();
+            
+            TempData["Success"] = "Kullanıcı başarıyla silindi.";
+            return RedirectToAction("Users");
         }
 
         // 6. Tickets Management (admin-tickets.html)

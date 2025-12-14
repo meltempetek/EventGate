@@ -311,6 +311,11 @@
     <Content Include="Views\Admin\Events.cshtml" />
     <Content Include="Views\Admin\AddEvent.cshtml" />
     <Content Include="Views\Admin\EditEvent.cshtml" />
+    <Content Include="Views\Admin\Venues.cshtml" />
+    <Content Include="Views\Admin\AddVenue.cshtml" />
+    <Content Include="Views\Admin\EditVenue.cshtml" />
+    <Content Include="Views\Admin\Users.cshtml" />
+    <Content Include="Views\Admin\EditUser.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

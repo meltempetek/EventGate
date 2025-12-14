@@ -1,0 +1,276 @@
+@model List<EventDeneme.Models.users>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Users";
+}
+
+<div class="admin-header">
+    <div>
+        <h1><i class="fa fa-users"></i> Kullanıcı Yönetimi</h1>
+        <p class="welcome-text">Sistemdeki tüm kullanıcıları görüntüleyin, düzenleyin veya silin</p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fa fa-check-circle"></i> @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">
+        <i class="fa fa-exclamation-circle"></i> @TempData["Error"]
+    </div>
+}
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .admin-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+    .admin-header h1 i {
+        color: #d22;
+        margin-right: 10px;
+    }
+    .welcome-text {
+        margin: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .users-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    tbody tr {
+        transition: background 0.2s;
+    }
+    tbody tr:hover {
+        background: #f8f9fa;
+    }
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .user-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+    .user-meta {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+    }
+    .btn-edit {
+        background: #007bff;
+        color: white;
+    }
+    .btn-edit:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+    }
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-delete:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    .empty-state h3 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+    }
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<div class="users-table">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Kullanıcı</th>
+                    <th>E-posta</th>
+                    <th>Telefon</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    @if (!string.IsNullOrEmpty(user.name))
+                                    {
+                                        @user.name.Substring(0, 1).ToUpper()
+                                    }
+                                    else if (!string.IsNullOrEmpty(user.email))
+                                    {
+                                        @user.email.Substring(0, 1).ToUpper()
+                                    }
+                                    else
+                                    {
+                                        <text>?</text>
+                                    }
+                                </div>
+                                <div>
+                                    <div class="user-name">
+                                        @{
+                                            string fullName = (user.name ?? "") + " " + (user.surname ?? "");
+                                            fullName = fullName.Trim();
+                                        }
+                                        @if (!string.IsNullOrEmpty(fullName))
+                                        {
+                                            @fullName
+                                        }
+                                        else
+                                        {
+                                            <text>İsimsiz Kullanıcı</text>
+                                        }
+                                    </div>
+                                    <div class="user-meta">ID: @user.id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span>@user.email</span>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(user.phone))
+                            {
+                                <span>@user.phone</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (user.created_at.HasValue)
+                            {
+                                <span>@user.created_at.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="@Url.Action("EditUser", "Admin", new { id = user.id })" class="btn-action btn-edit">
+                                <i class="fa fa-edit"></i> Düzenle
+                            </a>
+                            <form method="post" action="@Url.Action("DeleteUser", "Admin")" style="display: inline;" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@user.id" />
+                                <button type="submit" class="btn-action btn-delete">
+                                    <i class="fa fa-trash"></i> Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa fa-users"></i>
+            <h3>Henüz kullanıcı bulunmuyor</h3>
+            <p>Sistemde kayıtlı kullanıcı bulunmamaktadır.</p>
+        </div>
+    }
+</div>
