@@ -636,7 +636,121 @@ namespace EventDeneme.Controllers
         public ActionResult Organizers()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.organizers.ToList());
+            
+            ViewBag.Title = "Organizers";
+            var applications = db.organizer_applications
+                .Include("admins")
+                .Include("organizers")
+                .OrderByDescending(a => a.submitted_at)
+                .ToList();
+            
+            return View(applications);
+        }
+
+        // Organizer Application Detail
+        public ActionResult OrganizerApplicationDetail(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var application = db.organizer_applications
+                .Include("admins")
+                .Include("organizers")
+                .FirstOrDefault(a => a.id == id);
+            
+            if (application == null)
+            {
+                TempData["Error"] = "Başvuru bulunamadı.";
+                return RedirectToAction("Organizers");
+            }
+            
+            ViewBag.Title = "Organizer Application Detail";
+            
+            // Başvuruya ait belgeleri getir
+            var documents = db.organizer_documents
+                .Where(d => d.application_id == id)
+                .ToList();
+            
+            ViewBag.Documents = documents;
+            
+            return View(application);
+        }
+
+        // Accept Organizer Application
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AcceptOrganizerApplication(long id, string reviewNotes)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var application = db.organizer_applications.Find(id);
+            if (application == null)
+            {
+                TempData["Error"] = "Başvuru bulunamadı.";
+                return RedirectToAction("Organizers");
+            }
+            
+            if (application.status.ToLower() != "pending")
+            {
+                TempData["Error"] = "Bu başvuru zaten işlenmiş.";
+                return RedirectToAction("Organizers");
+            }
+            
+            // Yeni organizer kaydı oluştur
+            var organizer = new organizers
+            {
+                legal_name = application.org_name,
+                brand_name = application.org_name,
+                contact_email = application.contact_email,
+                status = "active",
+                created_at = DateTime.Now
+            };
+            
+            db.organizers.Add(organizer);
+            db.SaveChanges();
+            
+            // Başvuruyu güncelle
+            application.status = "approved";
+            application.organizer_id = organizer.id;
+            application.reviewed_by_admin_id = (long)Session["AdminID"];
+            application.review_notes = reviewNotes;
+            application.decided_at = DateTime.Now;
+            
+            db.SaveChanges();
+            
+            TempData["Success"] = "Organizatör başvurusu başarıyla onaylandı.";
+            return RedirectToAction("Organizers");
+        }
+
+        // Reject Organizer Application
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RejectOrganizerApplication(long id, string reviewNotes)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var application = db.organizer_applications.Find(id);
+            if (application == null)
+            {
+                TempData["Error"] = "Başvuru bulunamadı.";
+                return RedirectToAction("Organizers");
+            }
+            
+            if (application.status.ToLower() != "pending")
+            {
+                TempData["Error"] = "Bu başvuru zaten işlenmiş.";
+                return RedirectToAction("Organizers");
+            }
+            
+            // Başvuruyu reddet
+            application.status = "rejected";
+            application.reviewed_by_admin_id = (long)Session["AdminID"];
+            application.review_notes = reviewNotes;
+            application.decided_at = DateTime.Now;
+            
+            db.SaveChanges();
+            
+            TempData["Success"] = "Organizatör başvurusu reddedildi.";
+            return RedirectToAction("Organizers");
         }
 
     }

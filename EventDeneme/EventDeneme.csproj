@@ -318,6 +318,8 @@
     <Content Include="Views\Admin\EditUser.cshtml" />
     <Content Include="Views\Admin\Tickets.cshtml" />
     <Content Include="Views\Admin\Refunds.cshtml" />
+    <Content Include="Views\Admin\Organizers.cshtml" />
+    <Content Include="Views\Admin\OrganizerApplicationDetail.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

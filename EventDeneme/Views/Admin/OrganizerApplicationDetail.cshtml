@@ -1,0 +1,380 @@
+@model EventDeneme.Models.organizer_applications
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Organizer Application Detail";
+}
+
+<div class="admin-header">
+    <div>
+        <h1><i class="fa fa-file-alt"></i> Başvuru Detayları</h1>
+        <p class="welcome-text">Organizatör başvurusunu inceleyin ve karar verin</p>
+    </div>
+    <div class="header-actions">
+        <a href="@Url.Action("Organizers", "Admin")" class="btn-back">
+            <i class="fa fa-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">
+        <i class="fa fa-exclamation-circle"></i> @TempData["Error"]
+    </div>
+}
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .admin-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+    .admin-header h1 i {
+        color: #d22;
+        margin-right: 10px;
+    }
+    .welcome-text {
+        margin: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .btn-back {
+        background: #6c757d;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .detail-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    .detail-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .detail-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .detail-section h3 {
+        margin: 0 0 15px 0;
+        font-size: 18px;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    .detail-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+        align-items: start;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .detail-value {
+        color: #2c3e50;
+        font-size: 14px;
+    }
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    .badge-pending { background: #ffc107; color: #000; }
+    .badge-approved { background: #28a745; color: white; }
+    .badge-rejected { background: #dc3545; color: white; }
+    .action-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin-top: 30px;
+    }
+    .action-section h3 {
+        margin: 0 0 20px 0;
+        font-size: 18px;
+        color: #2c3e50;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 14px;
+    }
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        min-height: 100px;
+        resize: vertical;
+    }
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .btn-action {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 10px;
+    }
+    .btn-approve {
+        background: #28a745;
+        color: white;
+    }
+    .btn-approve:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-reject:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+    .btn-action:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .document-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .document-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    .document-item a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .document-item a:hover {
+        text-decoration: underline;
+    }
+    .document-type {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="detail-container">
+    <div class="detail-section">
+        <h3><i class="fa fa-building"></i> Organizasyon Bilgileri</h3>
+        <div class="detail-row">
+            <div class="detail-label">Organizasyon Adı:</div>
+            <div class="detail-value">@Model.org_name</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">İletişim E-postası:</div>
+            <div class="detail-value">
+                @if (!string.IsNullOrEmpty(Model.contact_email))
+                {
+                    <a href="mailto:@Model.contact_email">@Model.contact_email</a>
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Başvuru Tarihi:</div>
+            <div class="detail-value">
+                @if (Model.submitted_at.HasValue)
+                {
+                    @Model.submitted_at.Value.ToString("dd.MM.yyyy HH:mm")
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Durum:</div>
+            <div class="detail-value">
+                @{
+                    string statusClass = "badge-pending";
+                    string statusText = Model.status ?? "pending";
+                    if (statusText.ToLower() == "approved" || statusText.ToLower() == "accepted")
+                    {
+                        statusClass = "badge-approved";
+                    }
+                    else if (statusText.ToLower() == "rejected" || statusText.ToLower() == "denied")
+                    {
+                        statusClass = "badge-rejected";
+                    }
+                }
+                <span class="badge @statusClass">@statusText</span>
+            </div>
+        </div>
+        @if (Model.organizer_id.HasValue)
+        {
+            <div class="detail-row">
+                <div class="detail-label">Organizatör ID:</div>
+                <div class="detail-value">@Model.organizer_id</div>
+            </div>
+        }
+    </div>
+
+    @if (ViewBag.Documents != null && ((List<EventDeneme.Models.organizer_documents>)ViewBag.Documents).Any())
+    {
+        <div class="detail-section">
+            <h3><i class="fa fa-file"></i> Yüklenen Belgeler</h3>
+            <div class="document-list">
+                @foreach (var doc in (List<EventDeneme.Models.organizer_documents>)ViewBag.Documents)
+                {
+                    <div class="document-item">
+                        <a href="@doc.file_url" target="_blank">
+                            <i class="fa fa-external-link-alt"></i> Belgeyi Görüntüle
+                        </a>
+                        <div class="document-type">
+                            <strong>Tür:</strong> @doc.doc_type
+                        </div>
+                        @if (doc.uploaded_at.HasValue)
+                        {
+                            <div class="document-type">
+                                <strong>Yüklenme:</strong> @doc.uploaded_at.Value.ToString("dd.MM.yyyy")
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model.admins != null || !string.IsNullOrEmpty(Model.review_notes))
+    {
+        <div class="detail-section">
+            <h3><i class="fa fa-clipboard-check"></i> İnceleme Bilgileri</h3>
+            @if (Model.admins != null)
+            {
+                <div class="detail-row">
+                    <div class="detail-label">İnceleyen Admin:</div>
+                    <div class="detail-value">@Model.admins.username</div>
+                </div>
+            }
+            @if (Model.decided_at.HasValue)
+            {
+                <div class="detail-row">
+                    <div class="detail-label">Karar Tarihi:</div>
+                    <div class="detail-value">@Model.decided_at.Value.ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.review_notes))
+            {
+                <div class="detail-row">
+                    <div class="detail-label">İnceleme Notları:</div>
+                    <div class="detail-value">@Model.review_notes</div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (Model.status.ToLower() == "pending")
+    {
+        <div class="action-section">
+            <h3><i class="fa fa-gavel"></i> Karar Ver</h3>
+            
+            <form method="post" action="@Url.Action("AcceptOrganizerApplication", "Admin")" style="display: inline-block; width: 48%; margin-right: 2%;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.id" />
+                <div class="form-group">
+                    <label>İnceleme Notları (Opsiyonel)</label>
+                    <textarea name="reviewNotes" placeholder="Başvuruyu onaylama nedeninizi yazın..."></textarea>
+                </div>
+                <button type="submit" class="btn-action btn-approve" onclick="return confirm('Bu başvuruyu onaylamak istediğinizden emin misiniz?');">
+                    <i class="fa fa-check"></i> Başvuruyu Onayla
+                </button>
+            </form>
+
+            <form method="post" action="@Url.Action("RejectOrganizerApplication", "Admin")" style="display: inline-block; width: 48%;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.id" />
+                <div class="form-group">
+                    <label>Red Nedenleri (Opsiyonel)</label>
+                    <textarea name="reviewNotes" placeholder="Başvuruyu reddetme nedeninizi yazın..."></textarea>
+                </div>
+                <button type="submit" class="btn-action btn-reject" onclick="return confirm('Bu başvuruyu reddetmek istediğinizden emin misiniz?');">
+                    <i class="fa fa-times"></i> Başvuruyu Reddet
+                </button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="action-section" style="background: #e9ecef;">
+            <p style="margin: 0; color: #6c757d; font-weight: 600;">
+                <i class="fa fa-info-circle"></i> Bu başvuru zaten @(Model.status.ToLower() == "approved" ? "onaylanmış" : "reddedilmiş").
+            </p>
+        </div>
+    }
+</div>

@@ -1,0 +1,258 @@
+@model List<EventDeneme.Models.organizer_applications>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Organizers";
+}
+
+<div class="admin-header">
+    <div>
+        <h1><i class="fa fa-user-tie"></i> Organizatör Başvuruları</h1>
+        <p class="welcome-text">Organizatör başvurularını görüntüleyin, inceleyin ve karar verin</p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fa fa-check-circle"></i> @TempData["Success"]
+    </div>
+}
+/
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">
+        <i class="fa fa-exclamation-circle"></i> @TempData["Error"]
+    </div>
+}
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .admin-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+    .admin-header h1 i {
+        color: #d22;
+        margin-right: 10px;
+    }
+    .welcome-text {
+        margin: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .applications-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    tbody tr {
+        transition: background 0.2s;
+    }
+    tbody tr:hover {
+        background: #f8f9fa;
+    }
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .org-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+    .org-meta {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    .badge-pending { background: #ffc107; color: #000; }
+    .badge-approved { background: #28a745; color: white; }
+    .badge-rejected { background: #dc3545; color: white; }
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+    }
+    .btn-view {
+        background: #007bff;
+        color: white;
+    }
+    .btn-view:hover {
+        background: #0056b3;
+        transform: translateY(-1px);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    .empty-state h3 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+    }
+</style>
+
+<div class="applications-table">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Organizasyon Adı</th>
+                    <th>İletişim</th>
+                    <th>Başvuru Tarihi</th>
+                    <th>Durum</th>
+                    <th>İnceleyen</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var application in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="org-name">@application.org_name</div>
+                            @if (application.organizer_id.HasValue && application.organizers != null)
+                            {
+                                <div class="org-meta">
+                                    <i class="fa fa-check-circle"></i> Organizatör ID: @application.organizer_id
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(application.contact_email))
+                            {
+                                <div class="org-meta">@application.contact_email</div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (application.submitted_at.HasValue)
+                            {
+                                <span>@application.submitted_at.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                string statusClass = "badge-pending";
+                                string statusText = application.status ?? "pending";
+                                if (statusText.ToLower() == "approved" || statusText.ToLower() == "accepted")
+                                {
+                                    statusClass = "badge-approved";
+                                }
+                                else if (statusText.ToLower() == "rejected" || statusText.ToLower() == "denied")
+                                {
+                                    statusClass = "badge-rejected";
+                                }
+                            }
+                            <span class="badge @statusClass">@statusText</span>
+                        </td>
+                        <td>
+                            @if (application.admins != null)
+                            {
+                                <span>@(application.admins.username)</span>
+                            }
+                            @if (application.decided_at.HasValue)
+                            {
+                                <div class="org-meta">@application.decided_at.Value.ToString("dd.MM.yyyy")</div>
+                            }
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="@Url.Action("OrganizerApplicationDetail", "Admin", new { id = application.id })" class="btn-action btn-view">
+                                <i class="fa fa-eye"></i> İncele
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa fa-user-tie"></i>
+            <h3>Henüz başvuru bulunmuyor</h3>
+            <p>Sistemde kayıtlı organizatör başvurusu bulunmamaktadır.</p>
+        </div>
+    }
+</div>
