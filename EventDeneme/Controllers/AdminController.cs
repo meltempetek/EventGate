@@ -527,14 +527,109 @@ namespace EventDeneme.Controllers
         public ActionResult Tickets()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.tickets.ToList());
+            
+            ViewBag.Title = "Tickets";
+            var tickets = db.tickets
+                .Include("order_items")
+                .Include("order_items.orders")
+                .Include("order_items.orders.users")
+                .OrderByDescending(t => t.issued_at)
+                .ToList();
+            
+            return View(tickets);
+        }
+
+        // Update Ticket Status
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateTicketStatus(long id, string status)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var ticket = db.tickets.Find(id);
+            if (ticket == null)
+            {
+                TempData["Error"] = "Bilet bulunamadı.";
+                return RedirectToAction("Tickets");
+            }
+            
+            ticket.status = status;
+            db.SaveChanges();
+            
+            TempData["Success"] = "Bilet durumu başarıyla güncellendi.";
+            return RedirectToAction("Tickets");
         }
 
         // 7. Refunds Management (admin-refunds.html)
         public ActionResult Refunds()
         {
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            return View(db.refunds.ToList());
+            
+            ViewBag.Title = "Refunds";
+            var refunds = db.refunds
+                .Include("payments")
+                .Include("payments.orders")
+                .Include("payments.orders.users")
+                .OrderByDescending(r => r.id)
+                .ToList();
+            
+            return View(refunds);
+        }
+
+        // Process Refund (Approve)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ProcessRefund(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var refund = db.refunds.Find(id);
+            if (refund == null)
+            {
+                TempData["Error"] = "İade talebi bulunamadı.";
+                return RedirectToAction("Refunds");
+            }
+            
+            if (refund.status.ToLower() != "pending")
+            {
+                TempData["Error"] = "Bu iade talebi zaten işlenmiş.";
+                return RedirectToAction("Refunds");
+            }
+            
+            refund.status = "processed";
+            refund.processed_at = DateTime.Now;
+            db.SaveChanges();
+            
+            TempData["Success"] = "İade talebi başarıyla onaylandı ve işlendi.";
+            return RedirectToAction("Refunds");
+        }
+
+        // Reject Refund
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RejectRefund(long id)
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var refund = db.refunds.Find(id);
+            if (refund == null)
+            {
+                TempData["Error"] = "İade talebi bulunamadı.";
+                return RedirectToAction("Refunds");
+            }
+            
+            if (refund.status.ToLower() != "pending")
+            {
+                TempData["Error"] = "Bu iade talebi zaten işlenmiş.";
+                return RedirectToAction("Refunds");
+            }
+            
+            refund.status = "rejected";
+            refund.processed_at = DateTime.Now;
+            db.SaveChanges();
+            
+            TempData["Success"] = "İade talebi reddedildi.";
+            return RedirectToAction("Refunds");
         }
 
         // 8. Organizers Management (admin-organizers.html)

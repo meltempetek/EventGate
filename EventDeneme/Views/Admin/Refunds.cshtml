@@ -1,0 +1,335 @@
+@model List<EventDeneme.Models.refunds>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Refunds";
+}
+
+<div class="admin-header">
+    <div>
+        <h1><i class="fa fa-undo"></i> İade Yönetimi</h1>
+        <p class="welcome-text">İade taleplerini görüntüleyin, onaylayın veya reddedin</p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fa fa-check-circle"></i> @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">
+        <i class="fa fa-exclamation-circle"></i> @TempData["Error"]
+    </div>
+}
+
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .admin-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: #2c3e50;
+        font-weight: 700;
+    }
+    .admin-header h1 i {
+        color: #d22;
+        margin-right: 10px;
+    }
+    .welcome-text {
+        margin: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .refunds-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    tbody tr {
+        transition: background 0.2s;
+    }
+    tbody tr:hover {
+        background: #f8f9fa;
+    }
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .refund-amount {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+    .refund-meta {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    .badge-pending { background: #ffc107; color: #000; }
+    .badge-processed { background: #28a745; color: white; }
+    .badge-rejected { background: #dc3545; color: white; }
+    .badge-completed { background: #17a2b8; color: white; }
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-approve {
+        background: #28a745;
+        color: white;
+    }
+    .btn-approve:hover {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-reject:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+    .btn-action:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    .empty-state h3 {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+    }
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .user-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+</style>
+
+<div class="refunds-table">
+    @if (Model != null && Model.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>İade ID</th>
+                    <th>Kullanıcı</th>
+                    <th>Ödeme ID</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>İşlem Tarihi</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var refund in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #2c3e50;">#@refund.id</div>
+                            @if (!string.IsNullOrEmpty(refund.provider_refund_id))
+                            {
+                                <div class="refund-meta">
+                                    <i class="fa fa-external-link-alt"></i> @refund.provider_refund_id
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @if (refund.payments != null && refund.payments.orders != null && refund.payments.orders.users != null)
+                            {
+                                <div class="user-info">
+                                    <span class="user-name">
+                                        @{
+                                            string userName = (refund.payments.orders.users.name ?? "") + " " + (refund.payments.orders.users.surname ?? "");
+                                            userName = userName.Trim();
+                                        }
+                                        @if (!string.IsNullOrEmpty(userName))
+                                        {
+                                            @userName
+                                        }
+                                        else
+                                        {
+                                            <text>Kullanıcı</text>
+                                        }
+                                    </span>
+                                    <span class="refund-meta">@refund.payments.orders.users.email</span>
+                                </div>
+                            }
+                            else if (refund.payments != null && refund.payments.orders != null && !string.IsNullOrEmpty(refund.payments.orders.email))
+                            {
+                                <div class="user-info">
+                                    <span class="user-name">Misafir</span>
+                                    <span class="refund-meta">@refund.payments.orders.email</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (refund.payments != null)
+                            {
+                                <span>#@refund.payments.id</span>
+                                if (!string.IsNullOrEmpty(refund.payments.provider_payment_id))
+                                {
+                                    <div class="refund-meta">@refund.payments.provider_payment_id</div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="refund-amount">
+                                @if (refund.payments != null && !string.IsNullOrEmpty(refund.payments.currency))
+                                {
+                                    @refund.amount.ToString("N2") @refund.payments.currency
+                                }
+                                else
+                                {
+                                    @refund.amount.ToString("N2") <text>TRY</text>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @{
+                                string statusClass = "badge-pending";
+                                string statusText = refund.status ?? "pending";
+                                if (statusText.ToLower() == "processed" || statusText.ToLower() == "completed")
+                                {
+                                    statusClass = "badge-processed";
+                                }
+                                else if (statusText.ToLower() == "rejected")
+                                {
+                                    statusClass = "badge-rejected";
+                                }
+                            }
+                            <span class="badge @statusClass">@statusText</span>
+                        </td>
+                        <td>
+                            @if (refund.processed_at.HasValue)
+                            {
+                                <span>@refund.processed_at.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Beklemede</span>
+                            }
+                        </td>
+                        <td>
+                            @if (refund.status.ToLower() == "pending")
+                            {
+                                <form method="post" action="@Url.Action("ProcessRefund", "Admin")" style="display: inline;" onsubmit="return confirm('Bu iade talebini onaylamak istediğinizden emin misiniz?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@refund.id" />
+                                    <button type="submit" class="btn-action btn-approve">
+                                        <i class="fa fa-check"></i> Onayla
+                                    </button>
+                                </form>
+                                <form method="post" action="@Url.Action("RejectRefund", "Admin")" style="display: inline;" onsubmit="return confirm('Bu iade talebini reddetmek istediğinizden emin misiniz?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@refund.id" />
+                                    <button type="submit" class="btn-action btn-reject">
+                                        <i class="fa fa-times"></i> Reddet
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted">İşlenmiş</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fa fa-undo"></i>
+            <h3>Henüz iade talebi bulunmuyor</h3>
+            <p>Sistemde kayıtlı iade talebi bulunmamaktadır.</p>
+        </div>
+    }
+</div>
